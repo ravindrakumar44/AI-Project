@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UI/UX Chatbot</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <style>
+    #chat-container {
+      scrollbar-width: thin;
+      scrollbar-color: #c7d2fe #f1f1f1;
+    }
+
+    #chat-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #chat-container::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    #chat-container::-webkit-scrollbar-thumb {
+      background-color: #c7d2fe;
+      border-radius: 4px;
+    }
+
+    .chat-bubble {
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+
+    .user-bubble {
+      background-color: #6366f1;
+      color: white;
+    }
+
+    .bot-bubble {
+      background-color: #e0e7ff;
+      color: #1e1b4b;
+    }
+
+    .typing-indicator {
+      display: inline-block;
+    }
+
+    .typing-indicator span {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #6366f1;
+      margin: 0 2px;
+      opacity: 0.4;
+    }
+
+    .typing-indicator span:nth-child(1) { animation: typing 1s infinite; }
+    .typing-indicator span:nth-child(2) { animation: typing 1s infinite 0.2s; }
+    .typing-indicator span:nth-child(3) { animation: typing 1s infinite 0.4s; }
+
+    @keyframes typing {
+      0%, 100% { opacity: 0.4; transform: translateY(0); }
+      50% { opacity: 1; transform: translateY(-3px); }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col">
+  <header class="bg-indigo-600 text-white p-4 shadow-md">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-2xl font-bold">UI/UX Chatbot</h1>
+      <div class="flex items-center space-x-2">
+        <span class="h-3 w-3 bg-green-400 rounded-full animate-pulse"></span>
+        <span class="text-sm">Online</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 container mx-auto p-4 flex flex-col max-w-4xl">
+    <div id="chat-container" class="flex-1 bg-white rounded-lg shadow-md p-4 mb-4 overflow-y-auto">
+      <div class="welcome-message text-center py-8">
+        <div class="inline-block bg-indigo-100 text-indigo-800 p-4 rounded-lg">
+          <h2 class="text-xl font-semibold mb-2">Hello! 👋</h2>
+          <p class="text-gray-700">Ask me anything about UI/UX Design!</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-4">
+      <form id="chat-form" class="flex space-x-2">
+        <input
+          type="text"
+          id="user-input"
+          placeholder="Type your message here..."
+          class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          autocomplete="off"
+          required
+        />
+        <button
+          type="submit"
+          id="send-button"
+          class="bg-indigo-600 text-white px-4 py-3 rounded-lg hover:bg-indigo-700 transition-colors flex items-center disabled:opacity-50"
+        >
+          <span>Send</span>
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const chatForm = document.getElementById('chat-form');
+      const userInput = document.getElementById('user-input');
+      const chatContainer = document.getElementById('chat-container');
+      const sendButton = document.getElementById('send-button');
+
+      const uiuxKeywords = [
+  "design", "ui", "ux", "interface", "experience", "layout", "usability", "accessibility",
+  "responsive", "interaction", "wireframe", "prototype", "mockup", "persona", "sitemap",
+  "user journey", "user flow", "a/b testing", "typography", "color", "font", "branding",
+  "figma", "sketch", "adobe xd", "balsamiq", "zeplin", "card design", "modal", "navbar",
+  "feedback", "animation", "heuristic", "design system", "component", "cta", "grid", "form",
+
+  // Newly added
+  "dark mode", "light mode", "contrast", "whitespace", "visual hierarchy", "mobile-first",
+  "material design", "apple human interface", "microinteraction", "iconography", "svg",
+  "breadcrumb", "carousel", "toast", "tooltip", "dropdown", "popover", "stepper", "toggle",
+  "segmented control", "input field", "placeholder", "error message", "form validation",
+  "modal dialog", "overlay", "skeleton loading", "infinite scroll", "z-index", "z layer",
+  "responsive grid", "accessibility guidelines", "aria-label", "user feedback", "confirmation dialog",
+  "hover state", "focus state", "tap target", "touch friendly", "scroll behavior", "fluid layout",
+  "button style", "elevation", "card layout", "responsive nav", "dashboard ui", "ui animation",
+  "tailwind css", "css utility", "component design", "icon design", "onboarding ui" , "user testing",
+  "user research", "affordance", "fitts law", "cognitive load", "mental model", "user persona", "login", "signup",
+  "buttons", "password", "email", "username", "profile", "settings", "dashboard", "analytics",
+  "data visualization", "charts", "graphs", "infographic", "user interface", "user experience", "user-centered",
+  "user interface design", "user experience design", "interaction design", "visual design", "graphic design",
+  "web design", "mobile design", "app design", "product design", "service design", "design thinking", "design sprint",
+  "design critique", "design review", "design feedback", "design iteration", "design process", "design principles",
+    "design patterns", "design trends", "design tools", "design software", "design resources", "design community",
+    "design inspiration", "design portfolio", "design showcase", "design challenge", "design project", "design brief",
+    "design deliverables", "design assets", "design system", "design library", "design tokens", "design guidelines",
+    "design documentation", "design handoff", "design collaboration", "design workflow", "design management",
+    "design leadership", "design strategy", "design vision", "design mission", "design values", "design culture",
+    "design ethics", "design responsibility", "design impact", "design sustainability", "design accessibility",
+    "website design", "landing page", "call to action", "user onboarding", "user retention",
+    "user engagement", "user satisfaction", "user loyalty", "user acquisition", "user growth", "user journey mapping",
+    "user story", "user scenario", "user task", "user goal", "user need", "user pain point",
+    "user motivation", "user behavior", "user expectation", "user preference", "user feedback loop",
+    "user testing method", "user testing tool", "user testing platform", "user testing service",
+    "user testing process", "user testing report", "user testing analysis", "user testing result",
+    "submission", "confirmation", "notification", "alert", "warning", "error",
+    "success", "failure", "loading", "progress", "status", "message", "chatbot", "virtual assistant",
+    "AI assistant", "machine learning", "natural language processing", "text analysis", "sentiment analysis",
+    "chat interface", "chat design", "chat experience", "chat interaction", "chat flow",
+    "chat script", "chat conversation", "chat history", "chat log", "chat record", "chat summary",
+    "button", "link", "anchor", "text link", "button group", "button size",
+    "button color", "button style", "button state", "button icon", "button label",
+    "button text", "button action", "button click", "button hover", "button focus",
+    "button active", "button disabled", "button loading", "button outline", "button solid",
+    "button ghost", "button link", "button primary", "button secondary", "button tertiary",
+    "button danger", "button success", "button warning", "button info", "button light",
+    "button dark",
+    "button flat", "button round", "button square", "button pill", "button block",
+    "button full-width", "button icon-only", "button text-only", "button with icon",
+    "button with text", "button with image", "button with badge", "button with tooltip",
+    "button with dropdown", "button with menu", "button with popover", "button with modal",
+    "css", "css grid", "css flexbox", "css layout", "css animation", "css transition",
+    "css transform", "css filter", "css variable", "css custom property", "css media query",
+    "css responsive", "css breakpoint", "css unit", "css rem", "css em", "css px",
+    "css vh", "css vw", "css percentage", "css calc", "css clamp", "css minmax",
+    "css grid template", "css grid area", "css grid column", "css grid row", "css grid gap",
+    "css grid auto", "css grid layout", "css flex", "css flex direction", "css flex wrap",
+    "css flex justify", "css flex align", "css flex item", "css flex grow", "css flex shrink",
+    "css flex basis", "css flex order", "css flexbox layout", "css flexbox model",
+    "css flexbox alignment", "css flexbox order", "css flexbox direction", "css flexbox wrap",
+    "css flexbox item", "css flexbox container", "css flexbox properties", "css flexbox grid",
+    "css flexbox design", "css flexbox tutorial", "css flexbox guide", "css flexbox examples",
+    "css flexbox layout examples", "css flexbox layout tutorial", "css flexbox layout guide",
+    "css flexbox layout design", "css flexbox layout properties", "css flexbox layout model",
+    "css flexbox layout alignment", "css flexbox layout order", "css flexbox layout direction",
+    "padding", "margin", "border", "background", "color", "font-size",
+    "font-weight", "line-height", "text-align", "text-decoration", "text-transform",
+    "text-shadow", "letter-spacing", "word-spacing", "text-indent", "text-overflow",
+    "white-space", "overflow", "visibility", "opacity", "z-index", "position",
+    "top", "right", "bottom", "left", "float", "clear", "display",
+    "inline", "block", "inline-block", "flex", "grid", "table", "list-item",
+    "none", "hidden", "visible", "absolute", "relative", "fixed", "sticky",
+    "overflow-x", "overflow-y", "overflow-auto", "overflow-hidden", "overflow-scroll",
+    "overflow-visible", "overflow-clip", "overflow-ellipsis", "overflow-scrollbar",
+    "overflow-scrollbar-color", "overflow-scrollbar-width", "overflow-scrollbar-style",
+    "overflow-scrollbar-track", "overflow-scrollbar-thumb", "overflow-scrollbar-thumb-color",
+    "overflow-scrollbar-thumb-width", "overflow-scrollbar-thumb-height", "overflow-scrollbar-thumb-radius",
+    "overflow-scrollbar-thumb-border", "overflow-scrollbar-thumb-border-radius",
+    "overflow-scrollbar-thumb-border-width", "overflow-scrollbar-thumb-border-color",
+    "overflow-scrollbar-thumb-border-style", "overflow-scrollbar-thumb-border-image",
+    "overflow-scrollbar-thumb-border-image-source", "overflow-scrollbar-thumb-border-image-slice",
+    "overflow-scrollbar-thumb-border-image-width", "overflow-scrollbar-thumb-border-image-outset",
+    "overflow-scrollbar-thumb-border-image-repeat", "overflow-scrollbar-thumb-border-image-width",
+    "header", "footer", "nav", "section", "article", "aside",
+    "main", "h1", "h2", "h3", "h4", "h5", "h6",
+    "p", "ul", "ol", "li", "dl", "dt", "dd",
+    "blockquote", "figure", "figcaption", "hr", "pre", "code",
+    "table", "thead", "tbody", "tfoot", "tr", "th", "td",
+    "caption", "summary", "details", "dialog", "menu", "menuitem",
+    "summary", "summary", "summary", "summary", "summary", "summary",
+    "profile", "avatar", "badge", "label", "tag", "chip",
+    "pill", "button", "button group", "button toolbar", "button dropdown",
+    "button menu", "button popover", "button modal", "button tooltip",
+    "javascript", "javascript framework", "javascript library", "javascript function",
+    "javascript object", "javascript array", "javascript string", "javascript number",
+    "javascript boolean", "javascript null", "javascript undefined", "javascript symbol",
+    "javascript bigint", "javascript variable", "javascript constant", "javascript keyword",
+    "javascript operator", "javascript expression", "javascript statement", "javascript block",
+    "javascript scope", "javascript context", "javascript closure", "javascript promise",
+    "javascript async", "javascript await", "javascript callback", "javascript event",
+    "javascript listener", "javascript handler", "javascript DOM", "javascript BOM",
+    "javascript AJAX", "javascript fetch", "javascript XMLHttpRequest", "javascript JSON",
+    "javascript localStorage", "javascript sessionStorage", "javascript cookie",
+    "javascript storage", "javascript cache", "javascript history", "javascript location",
+    "javascript navigator", "javascript screen", "javascript window", "javascript document",
+    "login form", "signup form", "password reset", "email verification",
+    "login form components", "signup form components", "password reset components",
+    "login form code", "signup form code", "password reset code",
+    "login form design", "signup form design", "password reset design",
+    "login form example", "signup form example", "password reset example",
+    "login form template", "signup form template", "password reset template",
+    "login form tutorial", "signup form tutorial", "password reset tutorial",
+    "button examples", "button templates", "button tutorials",
+    "button design", "button code", "button components", "button styles",
+    "button states", "button sizes", "button colors", "button icons",
+    "button labels", "button text", "button actions", "button clicks",
+    "color", "color scheme", "color palette", "color theory",
+    "color wheel", "color harmony", "color contrast", "color psychology",
+    "color meaning", "color symbolism", "color temperature", "color saturation",
+    "color brightness", "color value", "color model", "color space",
+    "color picker", "color gradient", "color opacity", "color transparency",
+    "color hex", "color rgb", "color rgba", "color hsl",
+    "color hsla", "color cmyk", "color lab", "color lch",
+    "DOM", "DOM manipulation", "DOM traversal", "DOM events",
+    "DOM elements", "DOM attributes", "DOM properties", "DOM methods",
+    "DOM nodes", "DOM tree", "DOM structure", "DOM hierarchy",
+    "DOM API", "DOM interface", "DOM event handling", "DOM event delegation",
+    "DOM event propagation", "DOM event bubbling", "DOM event capturing","hi","hello","hey","greetings",
+    "howdy","salutations","welcome","good morning","good afternoon","good evening",
+    
+
+];
+
+
+      let chatHistory = [];
+
+      chatForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        const isUIUXRelated = uiuxKeywords.some(keyword =>
+          message.toLowerCase().includes(keyword)
+        );
+
+        addMessageToChat('user', message);
+        userInput.value = '';
+        sendButton.disabled = true;
+
+        const typingId = showTypingIndicator();
+
+        try {
+          if (!isUIUXRelated) {
+            removeTypingIndicator(typingId);
+            addMessageToChat('bot', '❌ Sorry, I only answer UI/UX-related questions.');
+            return;
+          }
+
+          const response = await fetch('http://localhost:5000/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: message, history: chatHistory })
+          });
+
+          const data = await response.json();
+          removeTypingIndicator(typingId);
+          addMessageToChat('bot', data.response);
+          chatHistory = data.history;
+        } catch (error) {
+          removeTypingIndicator(typingId);
+          addMessageToChat('bot', Sorry, an error occurred: ${error.message});
+        } finally {
+          sendButton.disabled = false;
+          userInput.focus();
+        }
+      });
+
+      function addMessageToChat(sender, message) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = mb-4 flex ${sender === 'user' ? 'justify-end' : 'justify-start'};
+
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.className = chat-bubble rounded-lg p-3 ${sender === 'user' ? 'user-bubble' : 'bot-bubble'};
+
+        if (message.includes("")) {
+          const blocks = message.match(/[\s\S]*?/g);
+          if (blocks) {
+            blocks.forEach(block => {
+              const langMatch = block.match(/(\w+)?/);
+              const language = langMatch && langMatch[1] ? langMatch[1] : '';
+              const codeContent = block.replace(/(\w+)?/, '').replace(/$/, '');
+
+              const htmlBlock = `
+                <div class="relative bg-gray-900 text-white rounded-md mt-2 mb-2">
+                  <textarea class="w-full p-3 font-mono bg-transparent resize-none outline-none code-block" readonly rows="6">${codeContent}</textarea>
+                  <div class="absolute top-2 right-2 flex gap-2 z-10">
+                    <button class="copy-btn text-xs bg-indigo-600 hover:bg-indigo-700 px-2 py-1 rounded">Copy</button>
+                    <button class="edit-btn text-xs bg-yellow-500 hover:bg-yellow-600 px-2 py-1 rounded">Edit</button>
+                    <button class="save-btn text-xs bg-green-600 hover:bg-green-700 px-2 py-1 rounded hidden">Save</button>
+                  </div>
+                </div>
+              `;
+              message = message.replace(block, htmlBlock);
+            });
+          }
+        }
+
+        if (!message.includes("<textarea")) {
+          bubbleDiv.innerHTML = message.replace(/\n/g, '<br>');
+        } else {
+          bubbleDiv.innerHTML = message;
+        }
+
+        messageDiv.appendChild(bubbleDiv);
+        chatContainer.appendChild(messageDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        if (sender === 'bot') {
+          enableCodeButtons();
+        }
+
+        chatHistory.push({ sender, message });
+      }
+
+      function enableCodeButtons() {
+        document.querySelectorAll('.copy-btn').forEach(btn => {
+          btn.onclick = () => {
+            const code = btn.closest('div').parentElement.querySelector('textarea').value;
+            navigator.clipboard.writeText(code);
+            btn.textContent = "Copied!";
+            setTimeout(() => btn.textContent = "Copy", 1000);
+          };
+        });
+
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+          btn.onclick = () => {
+            const textarea = btn.closest('div').parentElement.querySelector('textarea');
+            const saveBtn = btn.parentElement.querySelector('.save-btn');
+            textarea.removeAttribute('readonly');
+            textarea.focus();
+            saveBtn.classList.remove('hidden');
+          };
+        });
+
+        document.querySelectorAll('.save-btn').forEach(btn => {
+          btn.onclick = () => {
+            const textarea = btn.closest('div').parentElement.querySelector('textarea');
+            textarea.setAttribute('readonly', true);
+            btn.classList.add('hidden');
+          };
+        });
+      }
+
+      function showTypingIndicator() {
+        const typingId = 'typing-' + Date.now();
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'mb-4 flex justify-start';
+        messageDiv.id = typingId;
+
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.className = 'chat-bubble rounded-lg p-3 bot-bubble';
+
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'typing-indicator';
+        typingDiv.innerHTML = '<span></span><span></span><span></span>';
+
+        bubbleDiv.appendChild(typingDiv);
+        messageDiv.appendChild(bubbleDiv);
+        chatContainer.appendChild(messageDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        return typingId;
+      }
+
+      function removeTypingIndicator(id) {
+        const typingElement = document.getElementById(id);
+        if (typingElement) typingElement.remove();
+      }
+
+      userInput.addEventListener('input', () => {
+        sendButton.disabled = !userInput.value.trim();
+      });
+
+      userInput.focus();
+    });
+  </script>
+</body>
+</html>
